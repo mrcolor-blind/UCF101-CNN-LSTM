@@ -1,0 +1,1 @@
+# Flatten, padding, extracción de features
