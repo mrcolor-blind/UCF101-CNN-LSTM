@@ -1,0 +1,11 @@
+data/processed/
+
+data/raw/ucf101_2d.pkl
+
+data/splits/
+
+__pycache__/
+*.pyc
+
+READMEcopy.md
+

@@ -1,9 +1,217 @@
-# CNN + LSTM for UCF Dataset
 
-Hybrid CNN + LSTM model designed to explore the spacial-temporal structure of the 2D Skeletons obtained from the UCF101 dataset.
+# UCF101 – Action Recognition con Skeletons 2D  
+## Implementación de un modelo Deep Learning (CNN + LSTM)
 
-## 2D Skeletons
+Este repositorio contiene una implementación completa para la clasificación de acciones humanas usando el dataset **UCF101 Skeleton 2D**, siguiendo la arquitectura **CNN + LSTM**, y un pipeline modular reproducible que cubre:
+- Preprocesamiento del dataset
+- Construcción del modelo
+- Entrenamiento supervisado
+- Evaluación
+- Predicción individual
+- Organización profesional del proyecto
+
+### 2D Skeletons
 https://mmaction2.readthedocs.io/en/latest/dataset_zoo/skeleton.html
 
-## UCF
+### UCF
 https://www.crcv.ucf.edu/data/UCF101.php
+
+
+---
+
+## 1. Objetivo del Proyecto
+El objetivo es entrenar un modelo de deep learning capaz de reconocer acciones humanas en video utilizando **coordenadas 2D de esqueletos** (keypoints), extraídas del dataset UCF101 mediante modelos pose-estimation.  
+Este enfoque reduce la dimensionalidad del video completo y permite entrenar modelos eficientes con recursos limitados.
+
+El pipeline implementa:
+- Extracción de keypoints (proporcionados por el dataset)
+- Normalización y preprocesamiento
+- Construcción de secuencias temporales
+- Entrenamiento de redes híbridas CNN + LSTM
+
+---
+
+## 2. Estructura del Proyecto
+
+```
+ucf101-cnn-lstm/
+│
+├── main.py
+├── README.md
+├── requirements.txt
+│
+├── config/
+│ ├── config.yaml
+│ └── classes_subset.txt
+│
+├── data/
+│ ├── raw/ → ucf101_2d.pkl
+│ ├── processed/ → secuencias .npy preprocesadas
+│ └── splits/ → train.csv / val.csv / test.csv
+│
+├── src/
+│ ├── preprocessing/
+│ │ ├── loader.py
+│ │ ├── normalize.py
+│ │ ├── prepare_sequences.py
+│ │ └── build_dataset.py
+│ │
+│ ├── dataset/
+│ │ └── skeleton_dataset.py
+│ │
+│ ├── models/
+│ │ ├── cnn_lstm.py
+│ │ └── baseline_lstm.py
+│ │
+│ ├── training/
+│ │ ├── train.py
+│ │ ├── evaluate.py
+│ │ └── utils.py
+│ │
+│ ├── inference/
+│ │ └── predict.py
+│ │
+│ └── utils/
+│ ├── paths.py
+│ ├── logger.py
+│ └── seed.py
+│
+└── notebooks/
+├── exploratory.ipynb
+├── debug_sequences.ipynb
+└── test_model.ipynb
+```
+
+
+---
+
+## 3. Dataset: UCF101 Skeleton 2D
+
+El dataset utilizado proviene de la versión esquelética de UCF101, donde a cada video se le ha extraído una representación basada en **keypoints 2D** usando un modelo de pose estimation.
+
+Cada entrada del dataset contiene:
+- `frame_dir` → nombre del video  
+- `label` → clase de acción (entero)
+- `keypoint` → matriz de forma **(M × T × 17 × 2)**  
+  - M = número de personas  
+  - T = número de frames  
+  - 17 = keypoints estilo COCO  
+  - 2 = coordenadas (x,y)
+- `keypoint_score` → confianzas de detección (solo 2D)
+
+El archivo maestro `ucf101_2d.pkl` contiene:
+- un diccionario con `split`
+- una lista de `annotations`
+
+Cada `annotation` representa un video.
+
+---
+## 4. Preparación del repositorio
+
+Antes de correr el pipeline, asegúrate de descargar las anotaciones del siguiente link:
+https://download.openmmlab.com/mmaction/v1.0/skeleton/data/ucf101_2d.pkl
+y colocar `ucf101_2d.pkl` en `data/raw`.
+
+Recuerda instalar los recursos necesarios:
+```
+pip install -r requirements.txt
+```
+
+
+
+## 5. Pipeline de Preprocesamiento
+
+El preprocesamiento convierte cada anotación en una secuencia temporal lista para el modelo.
+
+### Pasos principales:
+
+1. Cargar `ucf101_2d.pkl`
+2. Iterar sobre todas las anotaciones
+3. Extraer keypoints principales (solo persona M=0)
+4. Normalizar:
+   - centrar en cadera/pelvis
+   - escalar por altura por frame
+   - smoothing temporal opcional
+5. Convertir `(T, 17, 2)` → `(T, 34)`
+6. Padding/truncation a `seq_len` fijo (configurable)
+7. Guardar cada video como `.npy`
+8. Generar splits estratificados:
+   - `train.csv`
+   - `val.csv`
+   - `test.csv`
+
+### Generación de nuevos splits
+Aunque el dataset contiene varios splits (`train1`, `train2`, `train3`, `test1`, etc.), estos pertenecen a protocolos de evaluación académica y:
+- no incluyen validation set  
+- no son compatibles con el preprocesamiento (videos pueden fallar o cambiar longitud)  
+- no permiten seleccionar solo algunas clases  
+- no garantizan reproducibilidad con los `.npy` nuevos  
+
+Por ello se generan splits **propios del pipeline**, completamente alineados con los datos preprocesados.
+
+---
+
+## 6. Modelos Implementados
+(Por implementar)
+
+## 7. Ejecución del Pipeline
+
+### 7.1 Preprocesamiento
+
+```
+python main.py preprocess
+```
+
+Genera:
+- `.npy` preprocesados
+- `dataset_index.csv`
+- `train.csv`, `val.csv`, `test.csv`
+
+---
+
+### 7.2 Entrenamiento
+(Por implementar)
+
+---
+
+### 7.3 Evaluación
+(Por implementar)
+
+---
+
+### 7.4 Predicción individual
+(Por implementar)
+
+---
+
+## 8. Configuración
+
+El archivo `config/config.yaml` define:
+- rutas del dataset
+- número de clases
+- longitud de secuencia
+- hiperparámetros (lr, batch_size, epochs)
+- arquitectura (cnn_lstm / baseline_lstm)
+
+Ejemplo de parámetros típicos:
+- seq_len: 100
+- lstm_units: 128
+- cnn_filters: 64
+- learning_rate: 1e-3
+
+---
+
+## 9. Notebooks Incluidos
+
+- **exploratory.ipynb**  
+  Exploración del archivo `ucf101_2d.pkl`, shapes, ejemplos, visualización de keypoints.
+
+- **debug_sequences.ipynb**  
+  (Por implementar)
+
+- **test_model.ipynb**  
+  (Por implementar)
+
+---
+
+
