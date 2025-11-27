@@ -1,22 +1,28 @@
 data:
   raw_path: "data/raw/"
+  splits_path: "data/splits/"
   processed_path: "data/processed/"
   train_split: "data/splits/train.csv"
   val_split:   "data/splits/val.csv"
   test_split:  "data/splits/test.csv"
   raw_pkl: "data/raw/ucf101_2d.pkl"
   seq_len: 100
+  feature_dim: 34
+  classes_subset: "config/classes_subset.txt"
+
 
 
 model:
   type: "cnn_lstm"          # o baseline_lstm
   cnn_filters: 64
   lstm_units: 128
+  cnn_kernel: 3
   dropout: 0.3
-  num_classes: 5
+  num_classes: 61
 
 training:
   batch_size: 32
-  lr: 1e-3
+  lr: 0.003
   epochs: 30
   scheduler: "reduce_on_plateau"
+  ckpt_path: "checkpoints/"
