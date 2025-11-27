@@ -105,6 +105,17 @@ El archivo maestro `ucf101_2d.pkl` contiene:
 
 Cada `annotation` representa un video.
 
+### 3.1 Clases
+
+Aunque el dataset originalmente tiene 101 clases, se filtraron las siguientes 5 para tener una implementación más simple y eficiente:
+
+ - ApplyEyeMakeup
+ - JumpingJack
+ - BasketballDunk
+ - PushUps
+ - YoYo
+
+
 ---
 ## 4. Preparación del repositorio
 
@@ -152,7 +163,40 @@ Por ello se generan splits **propios del pipeline**, completamente alineados con
 ---
 
 ## 6. Modelos Implementados
+
+### 6.1 Baseline: LSTM Simple
 (Por implementar)
+
+### 5.2 Modelo Final: CNN + LSTM (Híbrido Espacio–Temporal)
+
+El modelo final utilizado para la clasificación de acciones humanas está basado en una arquitectura híbrida **CNN + LSTM**, diseñada específicamente para secuencias de esqueletos 2D provenientes del dataset UCF101.
+
+#### Flujo del modelo
+
+1. **Entrada**
+   - Secuencias normalizadas de keypoints de forma `(seq_len, 34)`
+   - Corresponde a 17 joints × 2 coordenadas (x, y)
+
+2. **Bloque CNN Temporal**
+   - Se aplica una `Conv1D` sobre la dimensión temporal
+   - Extrae patrones de movimiento locales entre frames
+   - Incluye `BatchNorm`, `ReLU` y `MaxPool1D` para mejorar estabilidad y reducir la longitud temporal
+
+3. **Bloque LSTM**
+   - Recibe la salida reducida de la CNN
+   - Modela dependencias temporales de largo alcance
+   - Genera una representación final del movimiento del sujeto
+
+4. **Clasificador Final**
+   - Dropout para regularización
+   - Capa densa que proyecta la representación final hacia las clases seleccionadas (5 clases)
+   - Softmax implícito en la pérdida y en la etapa de predicción
+
+#### Ventajas del enfoque CNN + LSTM
+- Aprovecha dependencias temporales cortas (**CNN**) y largas (**LSTM**)
+- Computacionalmente eficiente comparado con modelos 3D-CNN
+- Robusto al ruido en keypoints y a variaciones de duración
+- Adecuado para datasets esqueléticos preprocesados
 
 ## 7. Ejecución del Pipeline
 
@@ -170,18 +214,48 @@ Genera:
 ---
 
 ### 7.2 Entrenamiento
-(Por implementar)
+
+```
+python main.py train
+```
+
+Lee:
+- modelo desde `config.yaml`
+- dataset desde `data/processed/`
+- splits desde `data/splits/`
+
+Genera:
+- checkpoints
+- métricas
+- logs de entrenamiento
 
 ---
 
 ### 7.3 Evaluación
-(Por implementar)
+
+```
+python main.py evaluate
+```
+
+Produce:
+- accuracy
+- F1-score
+- matriz de confusión
+- reporte por clase
 
 ---
 
 ### 7.4 Predicción individual
-(Por implementar)
 
+```
+python main.py predict --file ruta_al_video.npy
+```
+
+Muestra:
+- probabilidad por clase
+- clase final predicha
+
+---
 ---
 
 ## 8. Configuración

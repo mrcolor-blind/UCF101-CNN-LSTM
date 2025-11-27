@@ -18,7 +18,7 @@ model:
   lstm_units: 128
   cnn_kernel: 3
   dropout: 0.3
-  num_classes: 61
+  num_classes: 5
 
 training:
   batch_size: 32
