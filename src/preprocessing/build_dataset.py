@@ -26,6 +26,16 @@ from src.preprocessing.prepare_sequences import prepare_sequence
 from src.utils.paths import load_config, ensure_dir
 
 
+def load_subset_classes(config):
+    if not config["data"].get("use_subset", False):
+        return None  # usar todas
+
+    path = config["data"]["subset_classes_path"]
+    with open(path, "r") as f:
+        classes = [line.strip() for line in f.readlines()]
+    return classes
+
+
 # ============================================
 # FUNCIÓN PRINCIPAL DEL PIPELINE
 # ============================================
@@ -50,6 +60,16 @@ def run_preprocessing():
     ensure_dir(processed_path)
     ensure_dir(splits_path)
 
+    # CLASES
+    # Leer clases permitidas
+    classes_file = config["data"]["classes_subset"]
+    with open(classes_file, "r") as f:
+        allowed_classes = [line.strip() for line in f.readlines()]
+
+    # Crear mapeo clase → id
+    class_to_new_id = {cls: i for i, cls in enumerate(allowed_classes)}
+
+
     # 1. Cargar el archivo maestro
     print(f"Cargando anotaciones desde {raw_pkl_path} ...")
     with open(raw_pkl_path, "rb") as f:
@@ -62,8 +82,15 @@ def run_preprocessing():
 
     # 2. Procesar cada anotación como si fuera un archivo individual
     for ann in tqdm(annotations, desc="Procesando videos"):
+        # Obtener clase a partir del frame_dir
+        video_class = ann["frame_dir"].split("_")[1]   # ApplyEyeMakeup | BasketballDunk | etc.
+
+        # Si no está dentro del subset, saltar
+        if video_class not in allowed_classes:
+            continue
+
         try:
-            sample = process_single_annotation(ann, config, processed_path)
+            sample = process_single_annotation(ann, config, processed_path, class_to_new_id)
             if sample is not None:
                 data_list.append(sample)
         except Exception as e:
@@ -86,7 +113,7 @@ def run_preprocessing():
 # PROCESAR UNA ANOTACIÓN DEL PKL
 # ============================================
 
-def process_single_annotation(ann, config, processed_path):
+def process_single_annotation(ann, config, processed_path, class_to_new_id):
     """
     Procesa una única anotación del pkl maestro.
 
@@ -101,7 +128,11 @@ def process_single_annotation(ann, config, processed_path):
 
     video_id = ann["frame_dir"]          # string del nombre del video
     raw_kp = ann["keypoint"]             # (M, T, 17, 2)
-    label = ann["label"]                 # int
+    
+    frame_class = ann["frame_dir"].split("_")[1]
+    label = class_to_new_id[frame_class]
+
+
 
     # 1. Tomar solo la persona principal
     if raw_kp.ndim != 4:
