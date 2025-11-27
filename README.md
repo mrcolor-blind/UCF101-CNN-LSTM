@@ -1,3 +1,4 @@
+Autor: Miguel Angel Barrientos A01637150
 
 # UCF101 – Action Recognition con Skeletons 2D  
 ## Implementación de un modelo Deep Learning (CNN + LSTM)
