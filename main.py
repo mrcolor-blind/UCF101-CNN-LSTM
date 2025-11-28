@@ -13,8 +13,13 @@ from src.preprocessing.build_dataset import run_preprocessing
 from src.training.train import run_training
 from src.training.evaluate import run_evaluation
 from src.inference.predict import run_prediction
+from src.utils.seed import set_seed
+from src.utils.paths import load_config
 
 def main():
+    config = load_config()
+    set_seed(config["training"]["seed"])
+
     parser = argparse.ArgumentParser(description="UCF101 Skeleton Pipeline")
     subparsers = parser.add_subparsers(dest="command")
 

@@ -55,7 +55,7 @@ def run_prediction(input_file):
 
     model = model.to(device)
 
-    ckpt_path = os.path.join(config["training"]["ckpt_path"], "best_model.pt")
+    ckpt_path = os.path.join(config["training"]["ckpt_path"], f"best_{model_type}.pt")
     if not os.path.exists(ckpt_path):
         raise FileNotFoundError(f"No existe el checkpoint: {ckpt_path}")
 
