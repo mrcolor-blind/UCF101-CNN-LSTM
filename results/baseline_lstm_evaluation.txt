@@ -1,0 +1,28 @@
+=========== RESULTADOS ===========
+
+Fecha y hora de evaluación: 2025-11-28 17:15:37
+
+Loss en test:     0.3380
+Accuracy en test: 0.9368
+
+Matriz de confusión:
+[[20  1  0  1  0]
+ [ 0 19  0  0  0]
+ [ 0  1 18  0  1]
+ [ 1  0  0 14  0]
+ [ 0  1  0  0 18]]
+
+Reporte por clase:
+              precision    recall  f1-score   support
+
+           0       0.95      0.91      0.93        22
+           1       0.86      1.00      0.93        19
+           2       1.00      0.90      0.95        20
+           3       0.93      0.93      0.93        15
+           4       0.95      0.95      0.95        19
+
+    accuracy                           0.94        95
+   macro avg       0.94      0.94      0.94        95
+weighted avg       0.94      0.94      0.94        95
+
+

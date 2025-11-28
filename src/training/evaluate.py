@@ -1,4 +1,3 @@
-# Métricas, matriz de confusión
 # src/training/evaluate.py
 
 import os
@@ -7,22 +6,25 @@ import torch.nn as nn
 from tqdm import tqdm
 from sklearn.metrics import confusion_matrix, classification_report
 import numpy as np
+from datetime import datetime
 
 from src.dataset.skeleton_dataset import create_dataloader
 from src.models.cnn_lstm import CNNLSTM
 from src.models.baseline_lstm import BaselineLSTM
-from src.utils.paths import load_config
+from src.utils.paths import load_config, ensure_dir
 
 
 def run_evaluation():
     """
-    Evalúa el mejor modelo guardado (best_model.pt)
-    usando el test set.
-    Muestra:
+    Evalúa el mejor modelo guardado usando el test set.
+    Guarda:
+        - Timestamp
         - Loss
         - Accuracy
         - Matriz de confusión
         - Classification report
+    en:
+        results/{model_type}_evaluation.txt
     """
 
     print("\n[EVALUATE] Iniciando evaluación...\n")
@@ -33,6 +35,10 @@ def run_evaluation():
     config = load_config()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[EVALUATE] Usando dispositivo: {device}")
+
+    # carpeta results/
+    results_dir = "results/"
+    ensure_dir(results_dir)
 
     # ===========================
     # DATA
@@ -52,17 +58,12 @@ def run_evaluation():
 
     model = model.to(device)
 
-    # cargar checkpoint
-    ckpt_path = os.path.join(config["training"]["ckpt_path"], "best_model.pt")
+    ckpt_path = os.path.join(config["training"]["ckpt_path"], f"best_{model_type}.pt")
     if not os.path.exists(ckpt_path):
-        raise FileNotFoundError(
-            f"No se encontró el archivo de checkpoint: {ckpt_path}"
-        )
+        raise FileNotFoundError(f"No se encontró checkpoint: {ckpt_path}")
 
     print(f"[EVALUATE] Cargando pesos desde: {ckpt_path}")
     model.load_state_dict(torch.load(ckpt_path, map_location=device))
-
-    # modo evaluación
     model.eval()
 
     # ===========================
@@ -86,12 +87,10 @@ def run_evaluation():
             loss = criterion(logits, label_batch)
 
             total_loss += loss.item() * seq_batch.size(0)
-
             preds = torch.argmax(logits, dim=1)
             total_correct += (preds == label_batch).sum().item()
             total_samples += label_batch.size(0)
 
-            # guardar para métricas
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(label_batch.cpu().numpy())
 
@@ -100,18 +99,27 @@ def run_evaluation():
     # ===========================
     avg_loss = total_loss / total_samples
     accuracy = total_correct / total_samples
-
-    print("\n=========== RESULTADOS ===========")
-    print(f"Loss en test:     {avg_loss:.4f}")
-    print(f"Accuracy en test: {accuracy:.4f}")
-
-    # matriz de confusión
-    print("\nMatriz de confusión:")
     cm = confusion_matrix(all_labels, all_preds)
-    print(cm)
+    report = classification_report(all_labels, all_preds)
 
-    # clasificación por clase
-    print("\nReporte por clase:")
-    print(classification_report(all_labels, all_preds))
+    # ===========================
+    # GUARDAR RESULTADOS
+    # ===========================
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    output_path = os.path.join(results_dir, f"{model_type}_evaluation.txt")
 
-    print("\n[EVALUATE] Evaluación finalizada.\n")
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("=========== RESULTADOS ===========\n\n")
+        f.write(f"Fecha y hora de evaluación: {timestamp}\n\n")
+        f.write(f"Loss en test:     {avg_loss:.4f}\n")
+        f.write(f"Accuracy en test: {accuracy:.4f}\n\n")
+
+        f.write("Matriz de confusión:\n")
+        f.write(str(cm))
+        f.write("\n\n")
+
+        f.write("Reporte por clase:\n")
+        f.write(report)
+        f.write("\n\n")
+
+    print(f"\n[EVALUATE] Evaluación finalizada. Resultados guardados en:\n{output_path}\n")

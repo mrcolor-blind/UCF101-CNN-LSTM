@@ -17,7 +17,6 @@ https://mmaction2.readthedocs.io/en/latest/dataset_zoo/skeleton.html
 ### UCF
 https://www.crcv.ucf.edu/data/UCF101.php
 
-
 ---
 
 ## 1. Objetivo del Proyecto
@@ -129,6 +128,24 @@ Recuerda instalar los recursos necesarios:
 pip install -r requirements.txt
 ```
 
+### 4.1 Configuración importante (`config.yaml`)
+
+El archivo `config.yaml` controla **todo el pipeline**, incluyendo rutas, selección de modelo, hiperparámetros, clases filtradas y parámetros del preprocesamiento.
+
+A continuación se muestra un resumen de los campos más importantes:
+
+#### **Selección del modelo**
+Permite elegir fácilmente entre el modelo baseline y el modelo final:
+
+```yaml
+model:
+  type: "cnn_lstm"        # opciones: "cnn_lstm" o "baseline_lstm"
+  num_classes: 5
+  lstm_units: 128
+  dropout: 0.3
+  cnn_filters: 64         # usado solo en cnn_lstm
+  cnn_kernel: 3
+```
 
 
 ## 5. Pipeline de Preprocesamiento
@@ -166,9 +183,23 @@ Por ello se generan splits **propios del pipeline**, completamente alineados con
 ## 6. Modelos Implementados
 
 ### 6.1 Baseline: LSTM Simple
-(Por implementar)
 
-### 5.2 Modelo Final: CNN + LSTM (Híbrido Espacio–Temporal)
+El modelo baseline consiste en una única capa **LSTM** seguida de una capa totalmente conectada.  
+Su propósito es establecer un punto de referencia mínimo contra el cual comparar el desempeño del modelo final más avanzado.
+
+**Características principales:**
+- Entrada: secuencias `(seq_len, 34)`  
+- Una sola capa `LSTM(hidden_size=128)`  
+- `Dropout` para regularización  
+- `Linear → Softmax` para clasificación  
+- No captura patrones locales tan eficientemente como el modelo CNN+LSTM  
+- Extremadamente eficiente y rápido de entrenar
+
+**Objetivo del baseline:**  
+Evaluar qué tan bien se comporta un modelo recurrente puro, sin convoluciones temporales, y cuantificar la mejora aportada por la arquitectura híbrida.
+
+
+### 6.2 Modelo Final: CNN + LSTM (Híbrido Espacio–Temporal)
 
 El modelo final utilizado para la clasificación de acciones humanas está basado en una arquitectura híbrida **CNN + LSTM**, diseñada específicamente para secuencias de esqueletos 2D provenientes del dataset UCF101.
 
@@ -280,12 +311,6 @@ Ejemplo de parámetros típicos:
 
 - **exploratory.ipynb**  
   Exploración del archivo `ucf101_2d.pkl`, shapes, ejemplos, visualización de keypoints.
-
-- **debug_sequences.ipynb**  
-  (Por implementar)
-
-- **test_model.ipynb**  
-  (Por implementar)
 
 ---
 

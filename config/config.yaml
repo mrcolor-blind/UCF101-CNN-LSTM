@@ -13,7 +13,7 @@ data:
 
 
 model:
-  type: "cnn_lstm"          # o baseline_lstm
+  type: "cnn_lstm"          # cnn_lstm o baseline_lstm
   cnn_filters: 64
   lstm_units: 128
   cnn_kernel: 3
@@ -21,8 +21,12 @@ model:
   num_classes: 5
 
 training:
+  seed: 42
   batch_size: 32
   lr: 0.003
   epochs: 30
   scheduler: "reduce_on_plateau"
   ckpt_path: "checkpoints/"
+
+logging:
+  log_file: "logs/training_log.txt"
