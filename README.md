@@ -290,22 +290,6 @@ Muestra:
 ---
 ---
 
-## 8. Configuración
-
-El archivo `config/config.yaml` define:
-- rutas del dataset
-- número de clases
-- longitud de secuencia
-- hiperparámetros (lr, batch_size, epochs)
-- arquitectura (cnn_lstm / baseline_lstm)
-
-Ejemplo de parámetros típicos:
-- seq_len: 100
-- lstm_units: 128
-- cnn_filters: 64
-- learning_rate: 1e-3
-
----
 
 ## 9. Notebooks Incluidos
 
